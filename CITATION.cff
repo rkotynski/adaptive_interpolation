@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software in research, please cite the associated 2024 paper and consider citing this repository."
+title: "Adaptive Interpolation Sampling (MATLAB/Octave and Python)"
+url: "https://github.com/rkotynski/adaptive_interpolation"
+repository-code: "https://github.com/rkotynski/adaptive_interpolation"
+version: 1.1.0
+authors:
+  - family-names: "Kotyński"
+    given-names: "Rafał"
+license: MIT
+date-released: 2026-11-20
+preferred-citation:
+  type: article
+  title: "Rigorous optical modelling of long-wavelength infrared photodetector with 2D subwavelength hole array in gold film"
+  authors:
+    - family-names: "Janaszek"
+      given-names: "Andrzej"
+    - family-names: "Wróbel"
+      given-names: "Piotr"
+    - family-names: "Dems"
+      given-names: "Maciej"
+    - family-names: "Ceylan"
+      given-names: "Omer"
+    - family-names: "Gurbuz"
+      given-names: "Yasar"
+    - family-names: "Kubiszyn"
+      given-names: "Łukasz"
+    - family-names: "Piotrowski"
+      given-names: "Józef"
+    - family-names: "Kotyński"
+      given-names: "Rafał"
+  journal: "Opto-Electronics Review"
+  volume: 32
+  year: 2024
+  doi: 10.24425/opelre.2024.148831
