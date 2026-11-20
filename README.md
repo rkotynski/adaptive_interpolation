@@ -2,7 +2,7 @@
 
 [Repository / Repozytorium](https://github.com/rkotynski/adaptive_interpolation) · [English](#english) · [Polski](#polski) · [Citation / Cytowanie](#citation--cytowanie) · [License / Licencja](#license--licencja)
 
-**Author / Autor:** **Rafał Kotyński**, University of Warsaw / Uniwersytet Warszawski  
+**Authors / Autorzy:** Andrzej Janaszek, Piotr Wróbel, Maciej Dems, Omer Ceylan, Yasar Gurbuz, Łukasz Kubiszyn, Józef Piotrowski, Rafał Kotyński  
 **Code written by / Kod napisany przez:** **ChatGPT (OpenAI)** under the author's guidance / zgodnie z wytycznymi autora  
 **License / Licencja:** [MIT](LICENSE)  
 **Sampling strategy / Strategia próbkowania:** 75% interpolation-guided adaptation and 25% longest-interval exploration. / 75% adaptacji na podstawie interpolacji oraz 25% eksploracji najdłuższego przedziału.

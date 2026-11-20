@@ -9,7 +9,7 @@ description = "Adaptive one-dimensional sampling with interpolation disagreement
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
-authors = [{name = "Rafał Kotyński"}]
+authors = [{name = "Andrzej Janaszek"}, {name = "Piotr Wróbel"}, {name = "Maciej Dems"}, {name = "Omer Ceylan"}, {name = "Yasar Gurbuz"}, {name = "Łukasz Kubiszyn"}, {name = "Józef Piotrowski"}, {name = "Rafał Kotyński"}]
 dependencies = ["numpy>=1.23", "scipy>=1.9"]
 
 [project.optional-dependencies]

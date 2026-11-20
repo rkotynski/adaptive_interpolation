@@ -3,7 +3,7 @@
 EN: Interfaces and selection logic mirror probkuj_adaptacyjnie.m.
 PL: Interfejs i logika wyboru odpowiadają probkuj_adaptacyjnie.m.
 
-Author / Autor: Rafał Kotyński
+Authors / Autorzy: Andrzej Janaszek, Piotr Wróbel, Maciej Dems, Omer Ceylan, Yasar Gurbuz, Łukasz Kubiszyn, Józef Piotrowski, Rafał Kotyński
 Code written by / Kod napisał: ChatGPT (OpenAI)
 """
 from dataclasses import dataclass
