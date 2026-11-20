@@ -5,7 +5,7 @@
 **Author / Autor:** **Rafał Kotyński**, University of Warsaw / Uniwersytet Warszawski  
 **Code written by / Kod napisany przez:** **ChatGPT (OpenAI)** under the author's guidance / zgodnie z wytycznymi autora  
 **License / Licencja:** [MIT](LICENSE)  
-**Original MATLAB/Octave foundation / Podstawa MATLAB/Octave:** the author-supplied **v7** code, now extended with a mixed exploration/adaptation strategy (75%/25%). / Oryginalny kod **v7** rozszerzony o strategie mieszana (75%/25%).
+**Sampling strategy / Strategia próbkowania:** 75% interpolation-guided adaptation and 25% longest-interval exploration. / 75% adaptacji na podstawie interpolacji oraz 25% eksploracji najdłuższego przedziału.
 
 ![Adaptive sampling GIF / Animacja adaptacyjnego próbkowania](assets/adaptive_sampling.gif)
 
@@ -22,22 +22,18 @@ Computationally expensive models, such as rigorous coupled-wave analysis (RCWA),
 
 **The concept of adaptive data-point selection with linear and quadratic interpolation was proposed and employed for expensive RCWA calculations in** Janaszek *et al.* (2024), in particular **Figure 12 and its discussion**. Please **cite that paper if the software is useful**. The present code is an independent, openly distributed research/teaching implementation; it is not a claimed bit-for-bit reproduction of the numerical procedures or results of the paper. See [Citation](#citation--cytowanie).
 
-### What changed in this release
-
-The MATLAB and GNU Octave code builds on the actual **v7 files provided by the author**, rather than the simplified independent first package. The original function signatures and interpolation options were retained, with the newly requested probabilistic 75% adaptive / 25% exploration extension and additional English comments. The new Python module `adaptive_sampling.v7` translates the principal v7 features, including the exact rule for selecting three nodes for piecewise quadratic interpolation. The animation uses the same multiscale test function in both languages. The Python code has been tested; an execution test of MATLAB/Octave has not been performed here.
-
 ### How the algorithm works
 
 1. Supply a scalar function `f(x,a)`, bounds, and optional previously computed `x0,y0` samples. Existing values are reused **without evaluating the expensive function again**. Otherwise, initialize using the interval endpoints and a point near the midpoint.
-2. Build two interpolation models from the existing nodes. Choose among `linear`, `quadratic`, `pchip`, and `spline`. The original v7 defaults to **`linear` versus `pchip`**. The multiscale example explicitly uses **`linear` versus `quadratic`**.
+2. Build two interpolation models from the existing nodes. Choose among `linear`, `quadratic`, `pchip`, and `spline`. The default configuration uses to **`linear` versus `pchip`**. The multiscale example explicitly uses **`linear` versus `quadratic`**.
 3. For each adjacent interval, compare the interpolants on `n_tests` interior points (default **20**). An optional global grid mode tests uniformly spaced points across the entire domain, including an interval midpoint for every interval. No expensive function calls are needed for these comparisons.
-4. Draw a fresh random value **once per new sample**. With probability `exploration_fraction = 0.25`, select the **exact midpoint of the longest eligible interval**, regardless of its interpolation discrepancy. With the remaining probability `0.75`, use the existing v7 adaptive logic: the maximum interpolation disagreement while it exceeds `abs_tol + rel_tol * (max(y)-min(y))`. When the disagreement meets tolerance but some intervals exceed `max_step`, the adaptive branch bisects the longest such interval. The legacy `step` priority is still available.
+4. Draw a fresh random value **once per new sample**. With probability `exploration_fraction = 0.25`, select the **exact midpoint of the longest eligible interval**, regardless of its interpolation discrepancy. With the remaining probability `0.75`, use the adaptive selection rule: the maximum interpolation disagreement while it exceeds `abs_tol + rel_tol * (max(y)-min(y))`. When the disagreement meets tolerance but some intervals exceed `max_step`, the adaptive branch bisects the longest such interval. The alternative `step` priority is still available.
 5. In the adaptive discrepancy branch, choose the position of maximum detected disagreement, or optionally the **vertex of the local parabola**. Near machine-zero discrepancy, choose the midpoint. Random displacement (`jitter`, default **0.04**) affects only this discrepancy branch. **Exploration and maximum-step fallback always use exact midpoints**, without jitter or vertex selection.
 6. Store the expensive model value and repeat until the tolerance and maximum-step requirements hold, or the new-evaluation/total-point budget or numerical precision limit is reached.
 
 To disable random exploration, set `exploration_fraction=0` (Python) or `udzial_eksploracji=0` (MATLAB). To force bisection only, set the fraction to 1. The algorithm stops when the interpolation tolerance **and** maximum-step criterion hold, even if a completely unseen narrow feature remains.
 
-The local piecewise quadratic interpolation uses the three-node stencil `max(0,min(i-1,n-3))` for zero-based interval `i`. This matters: choosing the nearest neighbor on either side (as in the earlier simplified code) produces a different interpolant and therefore different sampling decisions.
+The local piecewise quadratic interpolation uses the three-node stencil `max(0,min(i-1,n-3))` for zero-based interval `i`. This matters: choosing the nearest neighbor on either side () produces a different interpolant and therefore different sampling decisions.
 
 **Important:** Two interpolants may agree while both are incorrect. Their difference is a *heuristic discrepancy indicator, not a certified interpolation error*. A feature entirely missed by initial samples cannot be guaranteed to be detected. The demonstration starts from **six uniformly spaced points only**, with **no initial samples added around the narrow resonance**. With the supplied seed and sample budget, exploration finds the peak. This is an empirical result for this example, **not a finite-budget guarantee**. Positive exploration probability eventually refines all intervals in the absence of premature stopping, but narrow structures can still be missed at a finite budget.
 
@@ -78,13 +74,13 @@ Outputs are `assets/adaptive_sampling.gif` and `assets/final_state.png`. The GIF
 
 ```python
 import numpy as np
-from adaptive_sampling import sample_v7, interpolate_samples
+from adaptive_sampling import sample_adaptive, interpolate_samples
 
 # EN: Replace with a slow solver. PL: Zastąp kosztownym modelem.
 def model(x, parameters):
     return np.cos(x) + parameters['strength']*np.exp(-((x-3)/.3)**2)
 
-result = sample_v7(
+result = sample_adaptive(
     model, 0.0, 6.0, {'strength': 0.7},
     max_new=60, max_points=100,
     abs_tol=1e-4, rel_tol=1e-3, max_step=.2,
@@ -98,12 +94,12 @@ x_dense = np.linspace(0, 6, 600)
 y_interpolated = interpolate_samples(result.x, result.y, x_dense, 'quadratic')
 
 # Resume / Wznowienie: never reevaluate the old samples.
-continued = sample_v7(model, 0.0, 6.0, {'strength': 0.7},
+continued = sample_adaptive(model, 0.0, 6.0, {'strength': 0.7},
                       x0=result.x, y0=result.y, max_new=30,
                       max_points=150, max_step=.1)
 ```
 
-The function returns `V7Result(x, y, info, history)`. Sample locations are sorted; `info` describes the stop reason, number of new expensive evaluations, initial count, final discrepancy, spacings, and selection history. `history` contains `(x, y, new_x)` snapshots. `point_choice='vertex'` chooses an internal quadratic extremum when available. The Python options are documented below alongside their MATLAB v7 counterparts.
+The function returns `SamplingResult(x, y, info, history)`. Sample locations are sorted; `info` describes the stop reason, number of new expensive evaluations, initial count, final discrepancy, spacings, and selection history. `history` contains `(x, y, new_x)` snapshots. `point_choice='vertex'` chooses an internal quadratic extremum when available. The Python options are documented below alongside their MATLAB counterparts.
 
 | Python parameter | MATLAB option | Meaning |
 | --- | --- | --- |
@@ -160,15 +156,15 @@ adaptive_interpolation/
 ├── pyproject.toml                Python package configuration
 ├── src/adaptive_sampling/
 │   ├── __init__.py
-│   └── v7.py                      Python port of original v7
+│   └── sampling.py                      Python implementation 
 ├── matlab/
-│   ├── probkuj_adaptacyjnie.m     original v7 algorithm + EN comments
-│   ├── interpoluj_probki.m        original v7 interpolation + EN comments
-│   ├── przyklad_probkowania.m    new multiscale example + GIF export
-│   ├── test_probkowania.m        original v7 regression tests
+│   ├── probkuj_adaptacyjnie.m     sampling algorithm with bilingual comments
+│   ├── interpoluj_probki.m        interpolation with bilingual comments
+│   ├── przyklad_probkowania.m    multiscale example + GIF export
+│   ├── test_probkowania.m        MATLAB/Octave regression tests
 │   └── README.md
-├── examples/demo_python.py       identical benchmark + rendered animation
-├── tests/test_v7.py              Python regression tests
+├── examples/demo_python.py       multiscale example + rendered animation
+├── tests/test_sampling.py              Python regression tests
 ├── assets/
 │   ├── adaptive_sampling.gif
 │   └── final_state.png
@@ -194,24 +190,20 @@ Kosztowne modele numeryczne, m.in. RCWA (rigorous coupled-wave analysis), częst
 
 **Idea takiego adaptacyjnego próbkowania z interpolacją liniową i kwadratową została zaproponowana i wykorzystana do kosztownych obliczeń RCWA w pracy Janaszek i in. (2024), przede wszystkim na rysunku 12 i w jego opisie.** Jeżeli program okaże się użyteczny, **prosimy o cytowanie tej publikacji**. Obecne repozytorium zawiera samodzielną implementację badawczą i dydaktyczną; nie deklarujemy dokładnego odtworzenia każdej technicznej decyzji ani wyników artykułu.
 
-### Relacja do wcześniejszej wersji v7
-
-Kod MATLAB/GNU Octave wywodzi się z **oryginalnego archiwum v7 przekazanego przez autora**. Zachowano nazwy funkcji i metody interpolacji, a regułę wyboru punktów rozszerzono o losową eksplorację 25% iteracji. Komentarze rozszerzono o język angielski. Wcześniejsza uproszczona wersja pakietu GitHub nie zawierała wszystkich tych możliwości. Nowa implementacja Pythona uwzględnia kluczowe szczegóły v7, w tym wybór trzech węzłów do interpolacji kwadratowej. Kod Python przeszedł testy; nie przeprowadzono tutaj testów wykonawczych MATLAB/Octave.
-
 ### Zasada działania
 
 1. Funkcja przyjmuje przedział `[xmin,xmax]`, funkcję `f(x,a)` oraz opcjonalne, wcześniej wyznaczone próbki `x0,y0`. Stare wyniki nie są ponownie liczone. W przeciwnym razie program oblicza wartości na końcach przedziału i w jego środku (z opcjonalnym przesunięciem).
-2. Tworzy dwie interpolacje z dostępnych: `linear`, `quadratic`, `pchip`, `spline`. Domyślne metody oryginalnej wersji v7 to **linear i pchip**. W przykładzie celowo używamy **linear i quadratic**.
+2. Tworzy dwie interpolacje z dostępnych: `linear`, `quadratic`, `pchip`, `spline`. Domyślne metody programu to **linear i pchip**. W przykładzie celowo używamy **linear i quadratic**.
 3. Porównuje interpolanty w domyślnie **20 punktach wewnątrz każdego przedziału** (`tryb_siatki='lokalna'`). Alternatywnie można zastosować siatkę globalną (`'globalna'`), uzupełnioną środkami przedziałów. Samo porównanie nie wymaga wywołań kosztownej funkcji.
-4. **Dla każdego nowego punktu** losuje niezależnie tryb: z prawdopodobieństwem **25%** (`udzial_eksploracji=0.25`) wybiera **dokładny środek najdłuższego dopuszczalnego przedziału**, nawet jeśli interpolanty są tam zgodne. Z prawdopodobieństwem **75%** wybiera dotychczasową strategię adaptacyjną, czyli największą rozbieżność interpolantów. Jeśli rozbieżności mieszczą się w tolerancji, ale nie jest spełnione `maks_krok`, gałąź adaptacyjna zagęszcza najdłuższy przedział przekraczający limit.
+4. **Dla każdego nowego punktu** losuje niezależnie tryb: z prawdopodobieństwem **25%** (`udzial_eksploracji=0.25`) wybiera **dokładny środek najdłuższego dopuszczalnego przedziału**, nawet jeśli interpolanty są tam zgodne. Z prawdopodobieństwem **75%** wybiera strategię adaptacyjną, czyli największą rozbieżność interpolantów. Jeśli rozbieżności mieszczą się w tolerancji, ale nie jest spełnione `maks_krok`, gałąź adaptacyjna zagęszcza najdłuższy przedział przekraczający limit.
 5. Tylko przy adaptacji do rozbieżności można wybrać wierzchołek lokalnej paraboli (`wybor_punktu='wierzcholek'`) i wprowadzić losowe przesunięcie (`losowosc`). **Eksploracja zawsze wybiera środek**, bez przesunięcia.
 6. Wywołuje kosztowną funkcję tylko dla nowego punktu. Zatrzymuje się po spełnieniu warunków albo po osiągnięciu limitu próbek, nowych wywołań lub dokładności numerycznej.
 
-**Istotny szczegół:** interpolacja kwadratowa wersji v7 używa kolejnych trzech węzłów, zwykle z węzłem poprzedzającym wybrany przedział. Jest to inna reguła niż wybór najbliższego sąsiada z lewej lub prawej strony, stosowany w poprzedniej uproszczonej implementacji. Różnica wpływa również na adaptacyjny wybór punktów.
+**Istotny szczegół:** interpolacja kwadratowa używa kolejnych trzech węzłów, zwykle z węzłem poprzedzającym wybrany przedział. Wybór węzłów ma wpływ na interpolant i decyzje o próbkowaniu.
 
 **Ograniczenie metody:** mała różnica interpolantów nie gwarantuje małego błędu względem prawdziwej funkcji. Program może przeoczyć rezonans węższy od odstępów między próbkami, dlatego warto stosować strategię mieszaną (eksploracja/adaptacja), odpowiedni `maks_krok` oraz niezależną walidację. Przy nieograniczonej liczbie iteracji eksploracja pomaga pokryć cały przedział, jednak nie gwarantuje wykrycia piku w skończonym budżecie.
 
-### Nowy przykład z ekstremami o różnych szerokościach
+### Przykład z ekstremami o różnych szerokościach
 
 Na przedziale `[0,10]` przyjęto szerokie maksimum Gaussa o parametrze szerokości **1,10**, minimum o szerokości **0,36** oraz bardzo wąski pik o szerokości **0,105**. Najszersze i najwęższe ekstremum różnią się więc skalą ponad **10 razy**. Wszystkie parametry funkcji i współrzędne **6 równomiernych próbek początkowych** znajdują się w przykładach (`examples/demo_python.py` oraz `matlab/przyklad_probkowania.m`).
 
@@ -229,7 +221,7 @@ python examples/demo_python.py
 
 Instalacja wymaga **NumPy** i **SciPy**; generowanie GIF wykorzystuje **Matplotlib** i **Pillow**, a testy — **pytest**. Animacja `assets/adaptive_sampling.gif` jest już dołączona do repozytorium i wyświetlana w README. Nie trzeba jej generować ponownie, aby obejrzeć działanie programu.
 
-Główną funkcją jest `sample_v7(func, xmin, xmax, a, ...)`. Zwraca obiekt `V7Result` o polach `x`, `y`, `info`, `history`. Metody `interpolate_samples` i `interval_disagreement` służą odpowiednio do obliczania interpolacji i diagnostyki. W tabeli w części angielskiej opisano wszystkie odpowiedniki parametrów wersji MATLAB oraz Python.
+Główną funkcją jest `sample_adaptive(func, xmin, xmax, a, ...)`. Zwraca obiekt `SamplingResult` o polach `x`, `y`, `info`, `history`. Metody `interpolate_samples` i `interval_disagreement` służą odpowiednio do obliczania interpolacji i diagnostyki. W tabeli w części angielskiej opisano wszystkie odpowiedniki parametrów wersji MATLAB oraz Python.
 
 ### MATLAB / GNU Octave
 
@@ -241,7 +233,7 @@ test_probkowania
 przyklad_probkowania
 ```
 
-Przykład wykorzystuje funkcję `probkuj_adaptacyjnie(f,xmin,xmax,a,opcje)` z wersji v7 i funkcję `interpoluj_probki`. Próbuje zapisać GIF do `assets/adaptive_sampling_matlab.gif`, o ile używany system graficzny obsługuje `getframe`, `frame2im`, `rgb2ind` oraz zapis GIF. Animacja jest odtwarzana ze zgromadzonych próbek, bez dodatkowego obliczania funkcji. Wersja MATLAB/Octave wymaga sprawdzenia w docelowym środowisku.
+Przykład wykorzystuje funkcję `probkuj_adaptacyjnie(f,xmin,xmax,a,opcje)` z  i funkcję `interpoluj_probki`. Próbuje zapisać GIF do `assets/adaptive_sampling_matlab.gif`, o ile używany system graficzny obsługuje `getframe`, `frame2im`, `rgb2ind` oraz zapis GIF. Animacja jest odtwarzana ze zgromadzonych próbek, bez dodatkowego obliczania funkcji. Wersja MATLAB/Octave wymaga sprawdzenia w docelowym środowisku.
 
 ### Praktyczne ograniczenia
 

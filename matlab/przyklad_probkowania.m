@@ -39,7 +39,7 @@ for k=0:info.liczba_nowych_wywolan
     if k==0
         xi=x0; yi=y0; added=NaN;
     else
-        % EN: Previously supplied initial points are kept unchanged.
+        % EN: Supplied initial points are kept unchanged.
         % PL: Zachowujemy wszystkie dostarczone probki poczatkowe.
         xi=[x0;info.historia_nowych_x(1:k)];
         [xi,~]=sort(xi);

@@ -1,5 +1,5 @@
-"""EN: Animated v7 demonstration with extrema of strongly differing widths.
-PL: Animacja algorytmu v7 dla ekstremów o bardzo różnych szerokościach.
+"""EN: Animated demonstration with extrema of strongly differing widths.
+PL: Animacja algorytmu dla ekstremów o bardzo różnych szerokościach.
 Run / Uruchom: python examples/demo_python.py
 """
 from pathlib import Path
@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from adaptive_sampling import sample_v7, interpolate_samples, interval_disagreement
+from adaptive_sampling import sample_adaptive, interpolate_samples, interval_disagreement
 
 
 def multiscale_function(x, _params=None):
@@ -32,7 +32,7 @@ def main():
     # PL: Jednorodne punkty startowe: BEZ punktow dodanych przy x=7.43.
     initial_x = np.linspace(0, 10, 6)
     initial_y = np.array([multiscale_function(x) for x in initial_x])
-    result = sample_v7(multiscale_function, 0, 10, None,
+    result = sample_adaptive(multiscale_function, 0, 10, None,
                        x0=initial_x, y0=initial_y,
                        max_new=90, max_points=180,
                        abs_tol=2e-4, rel_tol=3e-4, max_step=0.22,

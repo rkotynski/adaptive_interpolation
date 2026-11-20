@@ -3,7 +3,7 @@ message: "If you use this software in research, please cite the associated 2024 
 title: "Adaptive Interpolation Sampling (MATLAB/Octave and Python)"
 url: "https://github.com/rkotynski/adaptive_interpolation"
 repository-code: "https://github.com/rkotynski/adaptive_interpolation"
-version: 1.1.0
+version: 1.0.0
 authors:
   - family-names: "Kotyński"
     given-names: "Rafał"

@@ -1,5 +1,5 @@
 % TEST_PROBKOWANIA Proste testy bez okna graficznego i bez toolboxow.
-% EN: Regression tests of the original v7 MATLAB/Octave implementation.
+% EN: Regression tests of the MATLAB/Octave implementation.
 clear;
 
 % Test 1: funkcja liniowa, 3 probki wystarczaja bez maks_krok.
@@ -184,7 +184,7 @@ op.losowosc = 0;
 op.interpolacja1 = 'linear';
 op.interpolacja2 = 'quadratic';
 op.priorytet_wyboru = 'rozbieznosc';
-op.udzial_eksploracji = 0; % EN: Legacy priority regression is deterministic.
+op.udzial_eksploracji = 0; % EN: Priority regression is deterministic.
 [~,~,ir] = probkuj_adaptacyjnie(@(t,a) exp(-((t-0.5)/0.12).^2),0,2,[],op);
 assert(ir.historia_nowych_x(1) < 1.0);
 op.priorytet_wyboru = 'krok';

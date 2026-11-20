@@ -2,7 +2,7 @@ function yq = interpoluj_probki(x, y, xq, metoda)
 % INTERPOLUJ_PROBKI Interpolacja liniowa, kwadratowa, PCHIP lub spline.
 % EN: Linear, local quadratic, PCHIP, or cubic spline interpolation.
 % EN: The quadratic stencil uses the preceding node for interior intervals
-% EN: (three successive samples); this intentionally matches v7 exactly.
+% EN: (three successive samples); this intentionally uses the same three-node rule.
 % yq = interpoluj_probki(x, y, xq, metoda)
 % x musi byc rosnacym wektorem co najmniej 3 roznych wezlow.
 % xq musi nalezec do przedzialu [x(1), x(end)].

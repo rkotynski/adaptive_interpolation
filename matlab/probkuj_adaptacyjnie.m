@@ -1,7 +1,7 @@
 function [x, y, info] = probkuj_adaptacyjnie(f, xmin, xmax, a, opcje)
 % PROBKUJ_ADAPTACYJNIE Oszczedne probkowanie rzeczywistej funkcji f(x,a).
 % EN: Adaptive sampling of a real-valued, computationally expensive f(x,a).
-% EN: Original v7 interface and sampling logic have been preserved.
+% EN: Adaptive sampling with interpolation disagreement and exploration.
 % EN: Disagreement between interpolants is only a heuristic, NOT an error bound.
 %
 % [x,y,info] = probkuj_adaptacyjnie(f,xmin,xmax,a,opcje)
@@ -282,7 +282,7 @@ function [x, y, info] = probkuj_adaptacyjnie(f, xmin, xmax, a, opcje)
         % EN: 25% exploratory steps bisect the longest eligible interval.
         % PL: W 25% iteracji wybieramy dokladny srodek najdluzszego
         % dopuszczalnego przedzialu, niezaleznie od roznicy interpolantow.
-        % Pozostale 75% uzywa dotychczasowego wyboru adaptacyjnego.
+        % Pozostale 75% uzywa wyboru adaptacyjnego.
         eksploracja = rand() < o.udzial_eksploracji;
         czy_wymuszony_krok = false;
         if strcmp(o.priorytet_wyboru, 'krok') && ~isempty(dlugie)
